@@ -1,0 +1,5 @@
+3
+A B C
+A B 5
+B C 3
+EOF
