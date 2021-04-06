@@ -1,22 +1,12 @@
 import sys
 import math
 from threading import Thread, Lock
-
 from Buffer import *
 from Network import *
 from Router import *
+import time
 
 PRINT_LOCK = Lock()
-
-
-
-    
-
-
-
-    
-
-
 
 
 def print_dv(router):
@@ -31,9 +21,6 @@ def print_dv(router):
 
 def bellman_ford(router,dv_list):
 
-    #router.name = 'B'
-    #router.dv = [['A',8],['B',0],['C',1],['D',10000],['E',1],['F',10000],['G',10000],['H',10000],['I',10000]]
-
     num_routers = len(router.dv)
 
     for i in range(num_routers):
@@ -47,10 +34,6 @@ def bellman_ford(router,dv_list):
                     val = r_dv[1]
 
             val = val + x[1][i][1]
-
-            print(f"{i} --- {x[0]} --- {val}")
-
-            print(router.dv[i][1])
 
             if val < (router.dv[i][1]):
 
@@ -71,7 +54,7 @@ def get_tables_from_buffer(buffer, router):
             for i in range(values):
                 dv_list.append(x[1].pop(0))
     
-    print(f"calling bellamn ford for  {router.name}")
+    print(f"calling bellman ford for  {router.name}")
     bellman_ford(router, dv_list)
     
 
@@ -84,16 +67,7 @@ def forward_dv_to_neighbours(network, buffer, router):
         buffer.insert_buffer(router, r)
 
 
-def initialize_modified(router_list):
-
-    for router in router_list:
-
-        len_dv = len(router.dv)
-        router.modified = [0]*len_dv
-
-
         
-
 def initialize_dv(network,router_names, edge_list, router_list):
 
     for router in router_list:
@@ -148,7 +122,6 @@ def scan_input(filename):
 
     #open the file
     f = open(filename, "r")
-
     #first line has number of routers
     num_routers = f.readline()
     router_names = f.readline()
@@ -174,19 +147,6 @@ def scan_input(filename):
 
 if __name__ == "__main__":
 
-
-    #TESTING BELLMAN
-
-    #router = Router('B',[],[])
-
-    #dv_list = [('A',[['A',0],['B',8],['C',10000],['D',1],['E',10000],['F',10000],['G',10000],['H',10000],['I',10000]]),('C',[['A',10000],['B',1],['C',0],['D',10000],['E',10000],['F',10000],['G',10000],['H',10000],['I',10000]]),('E',[['A',10000],['B',1],['C',10000],['D',1],['E',0],['F',1],['G',10000],['H',1],['I',10000]])]
-
-    #bellman_ford(router,dv_list)
-
-    #router.show_details()
-
-
-
     #file name passed in cmd args
     filename =  sys.argv[1]
 
@@ -196,11 +156,9 @@ if __name__ == "__main__":
     router_list = initialize_neighbours(router_names,edge_list)
     network = Network(router_list)
     initialize_dv(network, router_names, edge_list, router_list)
-    initialize_modified(router_list)
+    network.initialize_modified()
     network.show_details()
     buffer = Buffer(router_names)
-    buffer.show_buffer()
-
     #for router in router_names:
 
     #    r = network.get_router_by_name(router)
@@ -214,37 +172,36 @@ if __name__ == "__main__":
     #    print_th.daemon = True
     #    print_th.start()
 
-    for router in router_names:
-        r = network.get_router_by_name(router)
-        forward_dv_to_neighbours(network, buffer, r)
+    start = time.time()
+    while True: 
 
-    buffer.show_buffer()
+        current_time = time.time()
 
-    for router in router_names:
-        r = network.get_router_by_name(router)
-        get_tables_from_buffer(buffer, r)
+        if current_time - start >= 2:
+            for router in router_names:
+                r = network.get_router_by_name(router)
+                forward_dv_to_neighbours(network, buffer, r)
+
+
+            for router in router_names:
+                r = network.get_router_by_name(router)
+                get_tables_from_buffer(buffer, r)
     
+
+            network.show_details()
+            network.initialize_modified()
+
+            start = time.time()
+
+
     
+
+
+
+
     
 
-
-    network.show_details()
-
-    initialize_modified(router_list)
-
-    for router in router_names:
-        r = network.get_router_by_name(router)
-        forward_dv_to_neighbours(network, buffer, r)
-
-    buffer.show_buffer()
-
-    for router in router_names:
-        r = network.get_router_by_name(router)
-        get_tables_from_buffer(buffer, r)
-
-
-    network.show_details()
-
+  
 
 
 
