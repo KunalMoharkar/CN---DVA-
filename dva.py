@@ -6,12 +6,21 @@ from Network import *
 from Router import *
 import time
 
-PRINT_LOCK = Lock()
+LOCK = Lock()
+
+
+def thread_target(network,buffer,r):
+
+    with LOCK:
+        forward_dv_to_neighbours(network,buffer,r)
+
+    with LOCK:
+        get_tables_from_buffer(buffer,r)
 
 
 def print_dv(router):
 
-    with PRINT_LOCK:
+    
 
         print(f"Distance vector for router {router.name}")
 
@@ -44,33 +53,38 @@ def bellman_ford(router,dv_list):
 
 def get_tables_from_buffer(buffer, router):
 
-    #print(f"Thread for router {router.name}")
 
-    for x in buffer.queue:
-        if x[0] == router.name:
-
-            dv_list = []
-            values = len(x[1])
-            for i in range(values):
-                dv_list.append(x[1].pop(0))
     
-    print(f"calling bellman ford for  {router.name}")
-    bellman_ford(router, dv_list)
+        print(f"Thread for router {router.name}")
+
+        for x in buffer.queue:
+            if x[0] == router.name:
+
+                dv_list = []
+                values = len(x[1])
+                for i in range(values):
+                    dv_list.append(x[1].pop(0))
+
+        bellman_ford(router, dv_list)
     
 
 def forward_dv_to_neighbours(network, buffer, router):
     
     #print(f"Thread for router {router.name}")
 
-    for n in router.neighbours:
-        r = network.get_router_by_name(n)
-        buffer.insert_buffer(router, r)
+
+        print(f"Thread for router {router.name}")
+
+        for n in router.neighbours:
+            r = network.get_router_by_name(n)
+            buffer.insert_buffer(router, r)
 
 
         
 def initialize_dv(network,router_names, edge_list, router_list):
 
     for router in router_list:
+
 
         dv = []
 
@@ -149,9 +163,6 @@ if __name__ == "__main__":
 
     #file name passed in cmd args
     filename =  sys.argv[1]
-
-    
-
     router_names, edge_list = scan_input(filename)
     router_list = initialize_neighbours(router_names,edge_list)
     network = Network(router_list)
@@ -159,19 +170,7 @@ if __name__ == "__main__":
     network.initialize_modified()
     network.show_details()
     buffer = Buffer(router_names)
-    #for router in router_names:
-
-    #    r = network.get_router_by_name(router)
-    #    print_th = Thread(target=print_dv,args=(r, ))
-    #    print_th.start()
-
-    #for router in router_names:
-
-    #    r = network.get_router_by_name(router)
-    #    print_th = Thread(target=forward_dv_to_neighbours,args=(network,buffer,r ))
-    #    print_th.daemon = True
-    #    print_th.start()
-
+   
     start = time.time()
     while True: 
 
@@ -180,13 +179,9 @@ if __name__ == "__main__":
         if current_time - start >= 2:
             for router in router_names:
                 r = network.get_router_by_name(router)
-                forward_dv_to_neighbours(network, buffer, r)
+                print_th = Thread(target=thread_target,args=(network,buffer,r ))
+                print_th.start()
 
-
-            for router in router_names:
-                r = network.get_router_by_name(router)
-                get_tables_from_buffer(buffer, r)
-    
 
             network.show_details()
             network.initialize_modified()
