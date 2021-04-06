@@ -118,11 +118,7 @@ def bellman_ford(router,dv_list):
 
                 router.dv[i][1] = val
 
-   
-
-
-
-    
+       
 
 def get_tables_from_buffer(buffer, router):
 
