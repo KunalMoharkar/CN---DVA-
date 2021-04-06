@@ -109,8 +109,6 @@ def initialize_dv(network,router_names, edge_list, router_list):
 def initialize_neighbours(router_names, edge_list):
 
     router_list = [] 
-    
-
     for router in router_names:
 
         rt = Router(router,[],[])
