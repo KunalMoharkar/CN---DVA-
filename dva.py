@@ -42,9 +42,6 @@ class Buffer():
             print(x[1])
 
 
-
-
-
 class Network():
 
     def __init__(self, routers):
@@ -67,6 +64,7 @@ class Router():
         self.name = name
         self.dv = dv
         self.neighbours = neighbours
+        self.modified = []
 
     def update_dv_value(self, dest, val):
 
@@ -76,8 +74,20 @@ class Router():
                 x[1] = val
 
     def show_details(self):
-        print(f"Name - {self.name} -- dv -- {self.dv} -- neighbours -- {self.neighbours}")
+        print(f"Router Name - {self.name}")
 
+        print(f"Distance Vector - ")
+
+        len_dv = len(self.dv)
+
+        for i in range(len_dv):
+
+            if self.modified[i] == 0:
+                mod = "NO"
+            else:
+                mod = "YES"
+            
+            print(f"{self.dv[i][0]} ---------- {self.dv[i][1]} ----------- {mod}")
 
 
 
@@ -94,9 +104,8 @@ def print_dv(router):
 
 def bellman_ford(router,dv_list):
 
-    router.name = 'B'
-    router.dv = [['A',8],['B',0],['C',1],['D',10000],['E',1],['F',10000],['G',10000],['H',10000],['I',10000]]
-
+    #router.name = 'B'
+    #router.dv = [['A',8],['B',0],['C',1],['D',10000],['E',1],['F',10000],['G',10000],['H',10000],['I',10000]]
 
     num_routers = len(router.dv)
 
@@ -114,34 +123,48 @@ def bellman_ford(router,dv_list):
 
             print(f"{i} --- {x[0]} --- {val}")
 
-            if val < router.dv[i][1]:
+            print(router.dv[i][1])
+
+            if val < (router.dv[i][1]):
 
                 router.dv[i][1] = val
+                router.modified[i] = 1
 
        
 
 def get_tables_from_buffer(buffer, router):
 
-    print(f"Thread for router {router.name}")
+    #print(f"Thread for router {router.name}")
 
     for x in buffer.queue:
         if x[0] == router.name:
 
             dv_list = []
-            for dv in x[1]:
-
-                dv_list.append(dv)
+            values = len(x[1])
+            for i in range(values):
+                dv_list.append(x[1].pop(0))
     
-
-
+    print(f"calling bellamn ford for  {router.name}")
+    bellman_ford(router, dv_list)
+    
 
 def forward_dv_to_neighbours(network, buffer, router):
     
-    print(f"Thread for router {router.name}")
+    #print(f"Thread for router {router.name}")
 
     for n in router.neighbours:
         r = network.get_router_by_name(n)
         buffer.insert_buffer(router, r)
+
+
+def initialize_modified(router_list):
+
+    for router in router_list:
+
+        len_dv = len(router.dv)
+        router.modified = [0]*len_dv
+
+
         
 
 def initialize_dv(network,router_names, edge_list, router_list):
@@ -164,8 +187,8 @@ def initialize_dv(network,router_names, edge_list, router_list):
         u = network.get_router_by_name(edge[0])
         v = network.get_router_by_name(edge[1])
 
-        u.update_dv_value(edge[1], edge[2])
-        v.update_dv_value(edge[0], edge[2])
+        u.update_dv_value(edge[1], int(edge[2]))
+        v.update_dv_value(edge[0], int(edge[2]))
 
 
 def initialize_neighbours(router_names, edge_list):
@@ -227,13 +250,13 @@ if __name__ == "__main__":
 
     #TESTING BELLMAN
 
-    router = Router('B',[],[])
+    #router = Router('B',[],[])
 
-    dv_list = [('A',[['A',0],['B',8],['C',10000],['D',1],['E',10000],['F',10000],['G',10000],['H',10000],['I',10000]]),('C',[['A',10000],['B',1],['C',0],['D',10000],['E',10000],['F',10000],['G',10000],['H',10000],['I',10000]]),('E',[['A',10000],['B',1],['C',10000],['D',1],['E',0],['F',1],['G',10000],['H',1],['I',10000]])]
+    #dv_list = [('A',[['A',0],['B',8],['C',10000],['D',1],['E',10000],['F',10000],['G',10000],['H',10000],['I',10000]]),('C',[['A',10000],['B',1],['C',0],['D',10000],['E',10000],['F',10000],['G',10000],['H',10000],['I',10000]]),('E',[['A',10000],['B',1],['C',10000],['D',1],['E',0],['F',1],['G',10000],['H',1],['I',10000]])]
 
-    bellman_ford(router,dv_list)
+    #bellman_ford(router,dv_list)
 
-    router.show_details()
+    #router.show_details()
 
 
 
@@ -246,10 +269,9 @@ if __name__ == "__main__":
     router_list = initialize_neighbours(router_names,edge_list)
     network = Network(router_list)
     initialize_dv(network, router_names, edge_list, router_list)
+    initialize_modified(router_list)
     network.show_details()
-
     buffer = Buffer(router_names)
-
     buffer.show_buffer()
 
     #for router in router_names:
@@ -258,15 +280,38 @@ if __name__ == "__main__":
     #    print_th = Thread(target=print_dv,args=(r, ))
     #    print_th.start()
 
+    #for router in router_names:
+
+    #    r = network.get_router_by_name(router)
+    #    print_th = Thread(target=forward_dv_to_neighbours,args=(network,buffer,r ))
+    #    print_th.daemon = True
+    #    print_th.start()
+
     for router in router_names:
-
         r = network.get_router_by_name(router)
-        print_th = Thread(target=forward_dv_to_neighbours,args=(network,buffer,r ))
-        print_th.start()
+        forward_dv_to_neighbours(network, buffer, r)
 
-buffer.show_buffer()
+    buffer.show_buffer()
+
+    for router in router_names:
+        r = network.get_router_by_name(router)
+        get_tables_from_buffer(buffer, r)
 
 
+    network.show_details()
+
+    for router in router_names:
+        r = network.get_router_by_name(router)
+        forward_dv_to_neighbours(network, buffer, r)
+
+    buffer.show_buffer()
+
+    for router in router_names:
+        r = network.get_router_by_name(router)
+        get_tables_from_buffer(buffer, r)
+
+
+    network.show_details()
 
 
 
