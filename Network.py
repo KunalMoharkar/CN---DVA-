@@ -18,3 +18,14 @@ class Network():
 
         for r in self.routers:
             r.show_details()
+
+    def check_if_coverged(self):
+
+        for r in self.routers:
+            
+            if r.has_changed():
+
+                return False
+        return True
+
+

@@ -18,16 +18,6 @@ def thread_target(network,buffer,r):
         get_tables_from_buffer(buffer,r)
 
 
-def print_dv(router):
-
-    
-
-        print(f"Distance vector for router {router.name}")
-
-        for x in router.dv:
-            print(x)
-
-
 def bellman_ford(router,dv_list):
 
     num_routers = len(router.dv)
@@ -53,10 +43,6 @@ def bellman_ford(router,dv_list):
 
 def get_tables_from_buffer(buffer, router):
 
-
-    
-        print(f"Thread for router {router.name}")
-
         for x in buffer.queue:
             if x[0] == router.name:
 
@@ -70,11 +56,6 @@ def get_tables_from_buffer(buffer, router):
 
 def forward_dv_to_neighbours(network, buffer, router):
     
-    #print(f"Thread for router {router.name}")
-
-
-        print(f"Thread for router {router.name}")
-
         for n in router.neighbours:
             r = network.get_router_by_name(n)
             buffer.insert_buffer(router, r)
@@ -170,11 +151,22 @@ if __name__ == "__main__":
     buffer = Buffer(router_names)
    
     start = time.time()
+
+    flag = 0
+    it = 1
+
     while True: 
 
+       
+        
         current_time = time.time()
 
         if current_time - start >= 2:
+
+            print(f"----------------------------------------------------------------------------------------------")
+            print(f"\nItreation count: {it} ")
+            it = it + 1
+            
             for router in router_names:
                 r = network.get_router_by_name(router)
                 print_th = Thread(target=thread_target,args=(network,buffer,r ))
@@ -186,10 +178,13 @@ if __name__ == "__main__":
 
             start = time.time()
 
+            if network.check_if_coverged():
 
-    
+                flag  = flag + 1
 
+                if flag == 2:
 
+                    break 
 
 
     
