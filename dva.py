@@ -2,92 +2,19 @@ import sys
 import math
 from threading import Thread, Lock
 
+from Buffer import *
+from Network import *
+from Router import *
 
 PRINT_LOCK = Lock()
 
 
-class Buffer():
-
-    def __init__(self,router_names):
-        self.queue = []
-
-        for router in router_names:
-
-            self.queue.append((router,[]))
-
-
-    def all_tables_received(self, router):
-
-        for x in self.queue:
-            if x[0] == router.name:
-                if len(x[1]) == len(router.neighbours):
-                    return True
-        
-        return False
-
-    def insert_buffer(self, router, r):
-        for x in self.queue:
-            if x[0] == router.name:
-                x[1].append((r.name, r.dv))
 
     
 
-    def show_buffer(self):
 
-        print("------- BUFFER ------ ")
-
-        for x in self.queue:
-
-            print(f"Queue for {x[0]}")
-            print(x[1])
-
-
-class Network():
-
-    def __init__(self, routers):
-        self.routers = routers
-
-    def get_router_by_name(self,name):
-        for r in self.routers:
-            if r.name == name:
-                return r
-
-    def show_details(self):
-
-        for r in self.routers:
-            r.show_details()
 
     
-class Router():
-
-    def __init__(self, name, dv, neighbours):
-        self.name = name
-        self.dv = dv
-        self.neighbours = neighbours
-        self.modified = []
-
-    def update_dv_value(self, dest, val):
-
-        for x in self.dv:
-
-            if x[0] == dest:
-                x[1] = val
-
-    def show_details(self):
-        print(f"Router Name - {self.name}")
-
-        print(f"Distance Vector - ")
-
-        len_dv = len(self.dv)
-
-        for i in range(len_dv):
-
-            if self.modified[i] == 0:
-                mod = "NO"
-            else:
-                mod = "YES"
-            
-            print(f"{self.dv[i][0]} ---------- {self.dv[i][1]} ----------- {mod}")
 
 
 
@@ -296,9 +223,14 @@ if __name__ == "__main__":
     for router in router_names:
         r = network.get_router_by_name(router)
         get_tables_from_buffer(buffer, r)
+    
+    
+    
 
 
     network.show_details()
+
+    initialize_modified(router_list)
 
     for router in router_names:
         r = network.get_router_by_name(router)
