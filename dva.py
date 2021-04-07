@@ -11,10 +11,15 @@ LOCK = Lock()
 
 def thread_target(network,buffer,r):
 
-    with LOCK:
+        
         forward_dv_to_neighbours(network,buffer,r)
+        #sleep thread for 2 sec
+        time.sleep(2)
+        
+        #proceed only when all neighbours received
+        while buffer.all_neighbours_received(r) == False:
+            pass
 
-    with LOCK:
         get_tables_from_buffer(buffer,r)
 
 
@@ -43,13 +48,14 @@ def bellman_ford(router,dv_list):
 
 def get_tables_from_buffer(buffer, router):
 
-        for x in buffer.queue:
-            if x[0] == router.name:
+        with LOCK:
+            for x in buffer.queue:
+                if x[0] == router.name:
 
-                dv_list = []
-                values = len(x[1])
-                for i in range(values):
-                    dv_list.append(x[1].pop(0))
+                    dv_list = []
+                    values = len(x[1])
+                    for i in range(values):
+                        dv_list.append(x[1].pop(0))
 
         bellman_ford(router, dv_list)
     
@@ -58,7 +64,8 @@ def forward_dv_to_neighbours(network, buffer, router):
     
         for n in router.neighbours:
             r = network.get_router_by_name(n)
-            buffer.insert_buffer(router, r)
+            with LOCK:
+                buffer.insert_buffer(router, r)
 
 
         
@@ -146,6 +153,7 @@ if __name__ == "__main__":
     router_list = initialize_neighbours(router_names,edge_list)
     network = Network(router_list)
     initialize_dv(network, router_names, edge_list, router_list)
+    print("-------------------INITIAL NETWORK -----------------------")
     network.initialize_modified()
     network.show_details()
     buffer = Buffer(router_names)
@@ -156,33 +164,35 @@ if __name__ == "__main__":
     it = 1
 
     while True: 
-
-       
-        
-        current_time = time.time()
-
-        if current_time - start >= 2:
-
             print(f"----------------------------------------------------------------------------------------------")
             print(f"\nItreation count: {it} ")
             it = it + 1
+
+            threads = []
             
             for router in router_names:
                 r = network.get_router_by_name(router)
-                print_th = Thread(target=thread_target,args=(network,buffer,r ))
-                print_th.start()
+                th = Thread(target=thread_target,args=(network,buffer,r ))
+                threads.append(th)
 
+            for th in threads:
+                th.start()
 
+            #wait for threads to end
+            for th in threads:
+                th.join()
+
+            
             network.show_details()
             network.initialize_modified()
 
-            start = time.time()
+            #check if converged and break
 
             if network.check_if_coverged():
 
                 flag  = flag + 1
 
-                if flag == 2:
+                if flag == 3:
 
                     break 
 

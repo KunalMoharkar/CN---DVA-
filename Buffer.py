@@ -22,7 +22,14 @@ class Buffer():
             if x[0] == router.name:
                 x[1].append((r.name, r.dv))
 
-    
+    def all_neighbours_received(self, router):
+        for x in self.queue:
+            if x[0] == router.name:
+                if len(x[1]) == len(router.neighbours):
+                    return True
+        
+        return False
+
 
     def show_buffer(self):
 
