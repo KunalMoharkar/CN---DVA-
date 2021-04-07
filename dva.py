@@ -11,7 +11,16 @@ LOCK = Lock()
 
 def thread_target(network,buffer,r):
 
+    for i in range(4):
         
+        
+
+        with LOCK:
+            print(f"Itreation number : {i+1}")
+            print(f"Table for router {r.name}")
+            r.show_details()
+            r.initialize_mod()
+
         forward_dv_to_neighbours(network,buffer,r)
         #sleep thread for 2 sec
         time.sleep(2)
@@ -21,6 +30,10 @@ def thread_target(network,buffer,r):
             pass
 
         get_tables_from_buffer(buffer,r)
+
+        #with LOCK:
+        #    print(f"Thread for router {r.name}")
+        #    r.show_details()
 
 
 def bellman_ford(router,dv_list):
@@ -163,6 +176,21 @@ if __name__ == "__main__":
     flag = 0
     it = 1
 
+    threads = []
+
+    for router in router_names:
+        r = network.get_router_by_name(router)
+        th = Thread(target=thread_target,args=(network,buffer,r ))
+        threads.append(th)
+
+    for th in threads:
+        th.start()
+
+    for th in threads:
+        th.join()
+
+
+'''
     while True: 
             print(f"----------------------------------------------------------------------------------------------")
             print(f"\nItreation count: {it} ")
@@ -195,7 +223,7 @@ if __name__ == "__main__":
                 if flag == 3:
 
                     break 
-
+'''
 
     
 

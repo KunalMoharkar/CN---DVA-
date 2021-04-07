@@ -12,6 +12,14 @@ class Router():
 
             if x[0] == dest:
                 x[1] = val
+
+    def initialize_mod(self):
+
+        len_mod = len(self.modified)
+
+        for i in range(len_mod):
+            self.modified[i] = 0
+
     
     def has_changed(self):
 
